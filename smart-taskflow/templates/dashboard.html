@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Smart TaskFlow{% endblock %}
+{% block head %}<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>{% endblock %}
+{% block content %}
+<section class="dashboard-page">
+  <div class="dashboard-heading">
+    <div><div class="eyebrow"><span class="eyebrow-dot"></span> YOUR WORKSPACE</div><h1>Good to see you, {{ user['name'].split(' ')[0] }} <span class="wave">✦</span></h1><p class="muted">A little progress each day adds up to big results.</p></div>
+    <button class="button button-primary" type="button" data-open-modal="task-modal"><span>＋</span> New task</button>
+  </div>
+  <div class="stats-grid">
+    <article class="stat-card"><div class="stat-card-top"><span class="stat-icon lavender">▤</span><span class="stat-caption">ALL TIME</span></div><div class="stat-value">{{ total }}</div><div class="stat-bottom"><span class="stat-name">Total tasks</span><span class="stat-badge badge-lavender">↗ Your plan</span></div></article>
+    <article class="stat-card"><div class="stat-card-top"><span class="stat-icon mint">✓</span><span class="stat-caption">COMPLETED</span></div><div class="stat-value">{{ completed }}</div><div class="stat-bottom"><span class="stat-name">Tasks completed</span><span class="stat-badge badge-mint">{{ ((completed / total * 100)|round|int) if total else 0 }}% of total</span></div></article>
+    <article class="stat-card"><div class="stat-card-top"><span class="stat-icon peach">◷</span><span class="stat-caption">IN PROGRESS</span></div><div class="stat-value">{{ in_progress }}</div><div class="stat-bottom"><span class="stat-name">Moving forward</span><span class="stat-badge badge-peach">Keep going</span></div></article>
+    <article class="stat-card"><div class="stat-card-top"><span class="stat-icon rose">!</span><span class="stat-caption">NEEDS ATTENTION</span></div><div class="stat-value">{{ overdue }}</div><div class="stat-bottom"><span class="stat-name">Overdue tasks</span><span class="stat-badge {{ 'badge-rose' if overdue else 'badge-mint' }}">{{ 'Review dates' if overdue else 'All caught up' }}</span></div></article>
+  </div>
+  <div class="dashboard-columns">
+    <section class="panel task-panel">
+      <div class="panel-heading"><div><h2>Your tasks</h2><p class="muted">Keep your next steps clear.</p></div><span class="count-pill">{{ tasks|length }} shown</span></div>
+      <form class="filter-bar" method="get" action="{{ url_for('dashboard') }}">
+        <div class="search-wrap"><span>⌕</span><input type="search" name="q" value="{{ q }}" placeholder="Search tasks..." aria-label="Search tasks"></div>
+        <select name="status" aria-label="Filter by status"><option {% if status_filter == 'All' %}selected{% endif %}>All</option><option {% if status_filter == 'Pending' %}selected{% endif %}>Pending</option><option {% if status_filter == 'In Progress' %}selected{% endif %}>In Progress</option><option {% if status_filter == 'Completed' %}selected{% endif %}>Completed</option></select>
+        <select name="category" aria-label="Filter by category"><option value="All">All categories</option>{% for cat in categories %}<option value="{{ cat }}" {% if category_filter == cat %}selected{% endif %}>{{ cat }}</option>{% endfor %}</select>
+        <button class="button button-outline button-small" type="submit">Filter</button>
+      </form>
+      <div class="task-list">
+        {% for task in tasks %}
+          <article class="task-row {% if task['status'] == 'Completed' %}task-done{% endif %}">
+            <form method="post" action="{{ url_for('update_task', task_id=task['id']) }}" class="task-status-form">
+              <input type="hidden" name="status" value="{{ 'Pending' if task['status'] == 'Completed' else 'Completed' }}">
+              <button class="task-check {% if task['status'] == 'Completed' %}is-checked{% endif %}" type="submit" aria-label="{{ 'Mark pending' if task['status'] == 'Completed' else 'Mark completed' }}: {{ task['title'] }}">{% if task['status'] == 'Completed' %}✓{% endif %}</button>
+            </form>
+            <div class="task-main"><div class="task-title-line"><h3>{{ task['title'] }}</h3><span class="priority-dot priority-dot-{{ task['priority']|lower }}"></span></div>
+              {% if task['description'] %}<p class="task-description">{{ task['description'] }}</p>{% endif %}
+              <div class="task-meta"><span class="category-tag">{{ task['category'] }}</span><span class="task-date {% if task['due_date'] and task['due_date'] < today and task['status'] != 'Completed' %}date-overdue{% endif %}">{% if task['due_date'] %}{{ 'Overdue · ' if task['due_date'] < today and task['status'] != 'Completed' else 'Due ' }}{{ task['due_date'] }}{% else %}No due date{% endif %}</span></div>
+            </div>
+            <div class="task-row-actions"><span class="status-label status-{{ task['status']|lower|replace(' ', '-') }}">{{ task['status'] }}</span>
+              <button type="button" class="icon-button" aria-label="Edit {{ task['title'] }}" data-edit-task='{{ {"id":task["id"],"title":task["title"],"description":task["description"],"category":task["category"],"priority":task["priority"],"due_date":task["due_date"],"status":task["status"]}|tojson }}'>✎</button>
+              <form method="post" action="{{ url_for('delete_task', task_id=task['id']) }}" data-confirm="Delete this task?"><button type="submit" class="icon-button delete-button" aria-label="Delete {{ task['title'] }}">×</button></form>
+            </div>
+          </article>
+        {% else %}
+          <div class="empty-state"><div class="empty-illustration">✦</div><h3>{% if q or status_filter != 'All' or category_filter != 'All' %}No tasks match those filters{% else %}Your task list is a blank canvas{% endif %}</h3><p>{% if q or status_filter != 'All' or category_filter != 'All' %}Try another search or change your filters.{% else %}Add your first task and start building momentum.{% endif %}</p>{% if not q and status_filter == 'All' and category_filter == 'All' %}<button class="button button-primary" data-open-modal="task-modal" type="button">＋ Add your first task</button>{% endif %}</div>
+        {% endfor %}
+      </div>
+    </section>
+    <aside class="side-column">
+      <section class="panel chart-panel"><div class="panel-heading"><div><h2>Task progress</h2><p class="muted">A snapshot of your workflow.</p></div></div><div class="chart-container"><canvas id="statusChart" aria-label="Task status chart"></canvas>{% if total == 0 %}<div class="chart-empty">Your chart will appear as you add tasks.</div>{% endif %}</div><div class="chart-legend"><span><i class="legend-dot legend-pending"></i>Pending <b>{{ pending }}</b></span><span><i class="legend-dot legend-progress"></i>In progress <b>{{ in_progress }}</b></span><span><i class="legend-dot legend-completed"></i>Completed <b>{{ completed }}</b></span></div></section>
+      <section class="focus-card"><div class="focus-top"><span class="focus-sparkle">✦</span><span class="focus-label">A LITTLE REMINDER</span></div><h3>Progress over<br>perfection.</h3><p>Choose one important thing, give it your attention, and let the rest follow.</p><div class="focus-decoration">✳</div></section>
+      <section class="panel category-panel"><div class="panel-heading"><div><h2>By category</h2><p class="muted">Where your energy goes.</p></div></div><div class="category-chart-wrap"><canvas id="categoryChart" aria-label="Tasks by category chart"></canvas></div></section>
+    </aside>
+  </div>
+</section>
+
+<div class="modal-backdrop" id="task-modal" aria-hidden="true">
+  <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-heading"><div><span class="eyebrow">MAKE IT HAPPEN</span><h2 id="modal-title">Add a new task</h2><p class="muted">Small steps create meaningful progress.</p></div><button type="button" class="modal-close" data-close-modal aria-label="Close">×</button></div>
+    <form method="post" action="{{ url_for('create_task') }}" id="task-form" class="form-stack task-form-grid">
+      <label class="span-two" for="task-title">Task title <span class="required">*</span></label><input class="span-two" id="task-title" name="title" placeholder="What would you like to get done?" required maxlength="180">
+      <label class="span-two" for="task-description">Description <span class="optional">(optional)</span></label><textarea class="span-two" id="task-description" name="description" rows="3" placeholder="Add a little more detail..."></textarea>
+      <label for="task-category">Category</label><label for="task-priority">Priority</label>
+      <input id="task-category" name="category" value="General" maxlength="60" required><select id="task-priority" name="priority"><option>Low</option><option selected>Medium</option><option>High</option></select>
+      <label for="task-due">Due date</label><label for="task-status">Status</label>
+      <input id="task-due" name="due_date" type="date"><select id="task-status" name="status"><option>Pending</option><option>In Progress</option><option>Completed</option></select>
+      <div class="modal-actions span-two"><button type="button" class="button button-outline" data-close-modal>Cancel</button><button type="submit" class="button button-primary">Save task <span>→</span></button></div>
+    </form>
+  </section>
+</div>
+<script id="chart-data" type="application/json">{{ chart_data|tojson }}</script>
+{% endblock %}
+{% block scripts %}
+<script>
+  window.taskFlowCharts = true;
+</script>
+{% endblock %}

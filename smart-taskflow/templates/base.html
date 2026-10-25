@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f7fb">
+  <meta name="description" content="Smart TaskFlow helps you plan, prioritize, and complete your work.">
+  <title>{% block title %}Smart TaskFlow{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="{{ url_for('index') }}">
+        <span class="brand-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M8 16.5l5.1 5L24.5 10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 2.5A13.5 13.5 0 1 0 29.5 16 13.5 13.5 0 0 0 16 2.5Z" fill="none" stroke="currentColor" stroke-width="2.5"/></svg></span>
+        <span>Smart<span class="brand-light">TaskFlow</span></span>
+      </a>
+      <nav class="top-nav">
+        {% if session.get('user_id') %}
+          <a href="{{ url_for('dashboard') }}" class="nav-link">Dashboard</a>
+          <span class="nav-user"><span class="avatar">{{ session.get('user_name', 'U')[:1]|upper }}</span><span>{{ session.get('user_name', 'User') }}</span></span>
+          <a href="{{ url_for('logout') }}" class="button button-quiet button-small">Log out</a>
+        {% else %}
+          <a href="{{ url_for('login') }}" class="nav-link">Sign in</a>
+          <a href="{{ url_for('register') }}" class="button button-primary button-small">Get started <span aria-hidden="true">↗</span></a>
+        {% endif %}
+      </nav>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-stack">
+          {% for category, message in messages %}
+            <div class="flash flash-{{ category }}" role="status">{{ message }}<button class="flash-close" type="button" aria-label="Dismiss message">×</button></div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <main>{% block content %}{% endblock %}</main>
+    <footer class="footer"><span>© {{ 2026 }} Smart TaskFlow</span><span>Make room for meaningful work.</span></footer>
+  </div>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

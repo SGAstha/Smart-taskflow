@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Smart TaskFlow — Plan with clarity{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="hero-copy">
+    <div class="eyebrow"><span class="eyebrow-dot"></span> YOUR WORK, IN FLOW</div>
+    <h1>Make every day<br>feel <span class="gradient-text">more focused.</span></h1>
+    <p class="hero-description">A calmer way to manage your tasks, protect your priorities, and see your progress — all in one thoughtful workspace.</p>
+    <div class="hero-actions">
+      <a class="button button-primary button-large" href="{{ url_for('register') }}">Start organizing <span aria-hidden="true">↗</span></a>
+      <a class="button button-outline button-large" href="{{ url_for('login') }}">I have an account</a>
+    </div>
+    <div class="hero-proof"><div class="mini-avatars"><span>A</span><span>S</span><span>M</span></div><span>Small steps. Real progress.</span><span class="proof-star">✦</span></div>
+  </div>
+  <div class="hero-art" aria-label="Illustration of a task dashboard">
+    <div class="decor decor-one"></div><div class="decor decor-two"></div>
+    <div class="preview-card">
+      <div class="preview-top"><div><span class="preview-kicker">MONDAY, OCTOBER 26</span><h3>Your overview</h3></div><span class="preview-menu">•••</span></div>
+      <div class="preview-stats">
+        <div class="preview-stat"><span class="stat-icon lavender">◷</span><span class="preview-number">12</span><span class="preview-label">Total tasks</span></div>
+        <div class="preview-stat"><span class="stat-icon mint">✓</span><span class="preview-number">08</span><span class="preview-label">Completed</span></div>
+      </div>
+      <div class="preview-section-head"><strong>Today's focus</strong><span>3 tasks</span></div>
+      <div class="preview-task"><span class="fake-check checked">✓</span><span class="fake-task-copy"><b>Review project brief</b><small>Productivity · Today</small></span><span class="tiny-priority priority-high">High</span></div>
+      <div class="preview-task"><span class="fake-check"></span><span class="fake-task-copy"><b>Prepare weekly plan</b><small>Planning · Today</small></span><span class="tiny-priority priority-medium">Medium</span></div>
+      <div class="preview-task"><span class="fake-check"></span><span class="fake-task-copy"><b>Read 10 pages</b><small>Personal · Today</small></span><span class="tiny-priority priority-low">Low</span></div>
+      <div class="preview-progress"><div class="progress-copy"><span>Weekly progress</span><b>68%</b></div><div class="progress-track"><span style="width:68%"></span></div></div>
+    </div>
+    <div class="floating-note"><span class="note-check">✓</span><span><b>Nice work!</b><small>You're building momentum.</small></span></div>
+  </div>
+</section>
+<section class="feature-strip">
+  <div class="feature"><span class="feature-icon">✦</span><div><b>Focus on what matters</b><p>Keep priorities visible.</p></div></div>
+  <div class="feature"><span class="feature-icon feature-icon-green">↗</span><div><b>See your progress</b><p>Celebrate every step.</p></div></div>
+  <div class="feature"><span class="feature-icon feature-icon-orange">⌁</span><div><b>Stay one step ahead</b><p>Keep deadlines in view.</p></div></div>
+</section>
+<section class="bottom-cta"><div><span class="eyebrow">A FRESH START</span><h2>Your next good day starts here.</h2></div><a class="button button-dark button-large" href="{{ url_for('register') }}">Create your free workspace ↗</a></section>
+{% endblock %}
